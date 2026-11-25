@@ -1,0 +1,15 @@
+# Build outputs
+target/
+build/
+dist/
+
+# TDE & OS files
+.idea/
+*.iml
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Environment & Secrets
+.env
+*.log
