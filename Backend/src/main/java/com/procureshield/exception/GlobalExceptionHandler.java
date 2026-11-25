@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -34,6 +35,40 @@ public class GlobalExceptionHandler {
                 request.getRequestURI()
         );
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ErrorResponseDto> handleBadRequest(
+            IllegalArgumentException ex,
+            HttpServletRequest request
+    ) {
+        log.warn("Bad request at {}: {}", request.getRequestURI(), ex.getMessage());
+
+        ErrorResponseDto body = new ErrorResponseDto(
+                Instant.now(),
+                HttpStatus.BAD_REQUEST.value(),
+                "BAD_REQUEST",
+                ex.getMessage(),
+                request.getRequestURI()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(body);
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ErrorResponseDto> handleForbidden(
+            AccessDeniedException ex,
+            HttpServletRequest request
+    ) {
+        log.warn("Access denied at {}: {}", request.getRequestURI(), ex.getMessage());
+
+        ErrorResponseDto body = new ErrorResponseDto(
+                Instant.now(),
+                HttpStatus.FORBIDDEN.value(),
+                "FORBIDDEN",
+                ex.getMessage(),
+                request.getRequestURI()
+        );
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(body);
     }
 
     @ExceptionHandler(ResourceNotFoundException.class)
