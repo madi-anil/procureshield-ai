@@ -5,19 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="241bdb98-da01-41af-9602-64cc9c034f89" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../docs/01_PROJECT_CONTEXT.md" beforeDir="false" afterPath="$PROJECT_DIR$/../docs/01_PROJECT_CONTEXT.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../docs/02_REQUIREMENTS.md" beforeDir="false" afterPath="$PROJECT_DIR$/../docs/02_REQUIREMENTS.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../docs/03_ARCHITECTURE.md" beforeDir="false" afterPath="$PROJECT_DIR$/../docs/03_ARCHITECTURE.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../docs/04_DATABASE.md" beforeDir="false" afterPath="$PROJECT_DIR$/../docs/04_DATABASE.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../docs/05_API_CONTRACT.md" beforeDir="false" afterPath="$PROJECT_DIR$/../docs/05_API_CONTRACT.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../docs/06_UI_FLOW.md" beforeDir="false" afterPath="$PROJECT_DIR$/../docs/06_UI_FLOW.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../docs/07_TASKS.md" beforeDir="false" afterPath="$PROJECT_DIR$/../docs/07_TASKS.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../docs/08_CODING_STANDARDS.md" beforeDir="false" afterPath="$PROJECT_DIR$/../docs/08_CODING_STANDARDS.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../docs/09_TESTING.md" beforeDir="false" afterPath="$PROJECT_DIR$/../docs/09_TESTING.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../docs/10_DEPLOYMENT.md" beforeDir="false" afterPath="$PROJECT_DIR$/../docs/10_DEPLOYMENT.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../docs/11_PROMPTS.md" beforeDir="false" afterPath="$PROJECT_DIR$/../docs/11_PROMPTS.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../.idea/ProcureShield_AI.iml" beforeDir="false" afterPath="$PROJECT_DIR$/../.idea/ProcureShield_AI.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -38,6 +27,65 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
   </component>
+  <component name="NextEditCompletionFeaturesState">
+    <decayedCancelled>
+      <entry key="MS100" value="1.0" />
+      <entry key="MS500" value="1.0" />
+      <entry key="S2" value="1.0" />
+      <entry key="S5" value="1.0000000000000009" />
+      <entry key="S10" value="1.000000083085132" />
+      <entry key="S30" value="1.0182082289430223" />
+      <entry key="S60" value="1.4768993303317894" />
+      <entry key="M2" value="3.928983447501493" />
+      <entry key="M5" value="10.572357609577404" />
+      <entry key="M10" value="15.572358845898512" />
+      <entry key="M15" value="18.77144802145458" />
+      <entry key="M30" value="32.4962061613196" />
+      <entry key="H1" value="64.2207215646559" />
+      <entry key="H2" value="102.87160892347607" />
+      <entry key="H4" value="133.8824796107777" />
+      <entry key="D1" value="168.784359530452" />
+      <entry key="W1" value="175.79821623445005" />
+    </decayedCancelled>
+    <decayedSelected>
+      <entry key="MS100" value="0.0" />
+      <entry key="MS500" value="3.527899562616498E-100" />
+      <entry key="S2" value="1.3705000418175102E-25" />
+      <entry key="S5" value="1.1343618735855854E-10" />
+      <entry key="S10" value="1.0650643496063697E-5" />
+      <entry key="S30" value="0.02209895363513582" />
+      <entry key="S60" value="0.15818575369615057" />
+      <entry key="M2" value="0.48441209870284097" />
+      <entry key="M5" value="1.0797796300181537" />
+      <entry key="M10" value="1.5126328119913457" />
+      <entry key="M15" value="2.1484050455868484" />
+      <entry key="M30" value="7.594932300550832" />
+      <entry key="H1" value="22.361460491900548" />
+      <entry key="H2" value="41.130203204207405" />
+      <entry key="H4" value="56.45452078774967" />
+      <entry key="D1" value="73.87755855100087" />
+      <entry key="W1" value="77.39652157688242" />
+    </decayedSelected>
+    <decayedShown>
+      <entry key="MS100" value="5.327640238152593E-7" />
+      <entry key="MS500" value="0.055629733328281035" />
+      <entry key="S2" value="0.4856537477708167" />
+      <entry key="S5" value="0.7490843052289973" />
+      <entry key="S10" value="0.8655055787576555" />
+      <entry key="S30" value="0.9920351557659532" />
+      <entry key="S60" value="1.6067106381371188" />
+      <entry key="M2" value="4.39437436350669" />
+      <entry key="M5" value="11.641036004599183" />
+      <entry key="M10" value="17.077655308909897" />
+      <entry key="M15" value="20.91104327438931" />
+      <entry key="M30" value="40.06865925477785" />
+      <entry key="H1" value="86.54778414429192" />
+      <entry key="H2" value="143.97042553395266" />
+      <entry key="H4" value="190.31562060241538" />
+      <entry key="D1" value="242.65728909877197" />
+      <entry key="W1" value="253.19404594830135" />
+    </decayedShown>
+  </component>
   <component name="ProblemsViewState">
     <option name="selectedTabId" value="CurrentFile" />
   </component>
@@ -55,12 +103,13 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
+    "JUnit.AuthServiceTest.executor": "Run",
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.git.unshallow": "true",
     "RunOnceActivity.typescript.service.memoryLimit.init": "true",
     "codeWithMe.voiceChat.enabledByDefault": "false",
-    "git-widget-placeholder": "main",
+    "git-widget-placeholder": "feature/auth",
     "ignore.virus.scanning.warn.message": "true",
     "kotlin-language-version-configured": "true",
     "nodejs_package_manager_path": "npm",
@@ -70,6 +119,28 @@
     "settings.editor.selected.configurable": "reference.projectsettings.compiler.annotationProcessors"
   }
 }]]></component>
+  <component name="RunManager">
+    <configuration name="AuthServiceTest" type="JUnit" factoryName="JUnit" temporary="true" nameIsGenerated="true">
+      <module name="Backend" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="com.procureshield.service.auth.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <option name="PACKAGE_NAME" value="com.procureshield.service.auth" />
+      <option name="MAIN_CLASS_NAME" value="com.procureshield.service.auth.AuthServiceTest" />
+      <option name="TEST_OBJECT" value="class" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="JUnit.AuthServiceTest" />
+      </list>
+    </recent_temporary>
+  </component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
@@ -90,5 +161,20 @@
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="java-method">
+          <url>file://$PROJECT_DIR$/src/main/java/com/procureshield/repository/RefreshTokenRepository.java</url>
+          <line>12</line>
+          <properties class="com.procureshield.repository.RefreshTokenRepository" method="findByTokenHash">
+            <option name="EMULATED" value="true" />
+            <option name="WATCH_EXIT" value="false" />
+          </properties>
+          <option name="timeStamp" value="3" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
 </project>
