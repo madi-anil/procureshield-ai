@@ -1,17 +1,16 @@
+
 # 08. CODING STANDARDS & ENGINEERING RULES — ProcureShield AI
 
 ## 1. Core Architectural Rules
-
-* **SOLID Principles:** Enforce Single Responsibility, Open-Closed, Liskov Substitution, Interface Segregation, and Dependency Inversion across all Java 21 backend services and React 18 TypeScript modules
+* **SOLID Principles:** Enforce Single Responsibility, Open-Closed, Liskov Substitution, Interface Segregation, and Dependency Inversion across all Java 21 backend services and React 18 TypeScript modules.
 * **Strict Layered Architecture:** Every backend module (`auth`, `user`, `product`, `cart`, `wishlist`, `order`, `payment`, `notification`) must follow the unidirectional flow: `Controller` -> `Service (Interface + Impl)` -> `Repository` -> `Entity / DTO`.
 * **No Business Logic in Controllers:** REST controllers must strictly handle HTTP request mapping, Jakarta `@Valid` input validation, `@PreAuthorize` role checks, Swagger `@Operation` documentation, and delegating to service interfaces.
-* **No Exposed JPA Entities:** Database `@Entity` classes must never be accepted as request bodies or returned directly in REST API responses[cite: 4, 6, 17]. Map all inputs and outputs using dedicated Request/Response DTOs (or Java 21 `record` classes).
-* **Constructor Injection Only:** Field injection (`@Autowired` on fields) is strictly prohibited[cite: 4, 6, 17]. Use Lombok's `@RequiredArgsConstructor` with `private final` dependencies.
+* **No Exposed JPA Entities:** Database `@Entity` classes must never be accepted as request bodies or returned directly in REST API responses. Map all inputs and outputs using dedicated Request/Response DTOs (or Java 21 `record` classes).
+* **Constructor Injection Only:** Field injection (`@Autowired` on fields) is strictly prohibited. Use Lombok's `@RequiredArgsConstructor` with `private final` dependencies.
 
 ---
 
 ## 2. Global Exception Handling (`@RestControllerAdvice`)
-
 All Spring Boot REST controllers must rely on a centralized `@RestControllerAdvice` handler that returns the standardized JSON error envelope defined in `05_API_CONTRACT.md` (`timestamp`, `status`, `error`, `message`, `path`):
 
 ```java
@@ -63,6 +62,48 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler(SeparationOfDutiesException.class)
+    public ResponseEntity<ErrorResponseDto> handleSeparationOfDuties(
+            SeparationOfDutiesException ex, HttpServletRequest request) {
+        log.warn("Separation of duties violation at {}: {}", request.getRequestURI(), ex.getMessage());
+        ErrorResponseDto error = new ErrorResponseDto(
+                Instant.now(),
+                HttpStatus.FORBIDDEN.value(),
+                "SEPARATION_OF_DUTIES",
+                ex.getMessage(),
+                request.getRequestURI()
+        );
+        return new ResponseEntity<>(error, HttpStatus.FORBIDDEN);
+    }
+
+    @ExceptionHandler(EscalationRequiredException.class)
+    public ResponseEntity<ErrorResponseDto> handleEscalationRequired(
+            EscalationRequiredException ex, HttpServletRequest request) {
+        log.warn("Escalation required at {}: {}", request.getRequestURI(), ex.getMessage());
+        ErrorResponseDto error = new ErrorResponseDto(
+                Instant.now(),
+                HttpStatus.FORBIDDEN.value(),
+                "ESCALATION_REQUIRED",
+                ex.getMessage(),
+                request.getRequestURI()
+        );
+        return new ResponseEntity<>(error, HttpStatus.FORBIDDEN);
+    }
+
+    @ExceptionHandler(ProductNotAuditedException.class)
+    public ResponseEntity<ErrorResponseDto> handleProductNotAudited(
+            ProductNotAuditedException ex, HttpServletRequest request) {
+        log.warn("Product not audited at {}: {}", request.getRequestURI(), ex.getMessage());
+        ErrorResponseDto error = new ErrorResponseDto(
+                Instant.now(),
+                HttpStatus.CONFLICT.value(),
+                "PRODUCT_NOT_AUDITED",
+                ex.getMessage(),
+                request.getRequestURI()
+        );
+        return new ResponseEntity<>(error, HttpStatus.CONFLICT);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponseDto> handleUnhandledException(
             Exception ex, HttpServletRequest request) {
@@ -77,14 +118,18 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }
+
 ```
+
+---
 
 ## 3. Concurrency, Database & Async Integration Standards
 
-* **Pessimistic Locking on Budget Ledgers:** PO approval (reserve) and invoice settlement (reserved → spent) must run in `@Transactional` and load the department via `@Lock(LockModeType.PESSIMISTIC_WRITE)`. Every mutation must preserve `annual = remaining + reserved + spent`. A check-only read of `remaining_budget` without mutation is prohibited.
-* **Append-Only Audit Trails:** `PoAuditLogRepository` must never expose `delete` or `update` operations; all state transitions must insert a new immutable record into `po_audit_logs`.
-* **Non-Blocking AI SLA Audits (`@Async`):** Multipart PDF uploads to Cloudflare R2 must validate MIME type (`application/pdf`) and file size ($\le 10\text{ MB}$) before streaming to S3Client, return `202 Accepted` immediately, and delegate Apache PDFBox text extraction + Gemini API scoring to a dedicated `TaskExecutor` thread pool.
-* **LLM Resilience & Deterministic Output:** Gemini API calls must enforce structured JSON output (`temperature = 0.0`). Any network timeout, HTTP `429`, or malformed JSON response must be caught gracefully and update `audit_status` to `MANUAL_REVIEW_REQUIRED` without crashing the worker thread.
+* **Pessimistic Locking on Budget Ledgers:** PO approval (reserve) and invoice settlement (`reserved -> spent`) must run in `@Transactional` and load the department via `@Lock(LockModeType.PESSIMISTIC_WRITE)`. Every mutation must preserve `annual = remaining + reserved + spent`. A check-only read of `remaining_budget` without mutation is prohibited.
+* **Append-Only Audit Trails:** `PoAuditLogRepository` must never expose delete or update operations; all state transitions must insert a new immutable record into `po_audit_logs`. The database enforces this with triggers (see `04_DATABASE.md`), so application code must not attempt updates or deletes.
+* **Configurable Approval Threshold:** The escalation amount must be injected via `@ConfigurationProperties("approval")` (`approval.escalation-threshold: ${APPROVAL_ESCALATION_THRESHOLD:10000.00}` in `application.yml`). Never hardcode it (magic-number rule).
+* **Non-Blocking AI SLA Audits (`@Async`):** Multipart PDF uploads to Cloudflare R2 must validate MIME type (`application/pdf`) and file size (`<= 10 MB`) before streaming to `S3Client`, return `202 Accepted` immediately, and delegate Apache PDFBox text extraction + Gemini API scoring to a dedicated `TaskExecutor` thread pool.
+* **LLM Resilience & Deterministic Output:** Gemini API calls must enforce structured JSON output (`temperature = 0.0`). Any network timeout, HTTP `429`, or malformed JSON response must be caught gracefully and update `audit_status` (`MANUAL_REVIEW_REQUIRED`, or `FAILED` for unreadable PDFs) with an `audit_failure_reason`, without crashing the worker thread. The model ID is injected via `${AI_MODEL}`, never hard-coded. The LLM only extracts facts; `RiskScoringService` computes the score (`03_ARCHITECTURE.md` §5.1.1), and extracted contract text is treated as untrusted input.
 * **Flyway Schema Governance:** `spring.jpa.hibernate.ddl-auto` must be set to `validate`. All schema changes must be authored as sequential SQL migrations under `src/main/resources/db/migration/` (`V1__init_procureshield_schema.sql`).
 
 ---
@@ -92,8 +137,8 @@ public class GlobalExceptionHandler {
 ## 4. Frontend TypeScript & React 18 Standards (`/frontend`)
 
 * **Strict TypeScript:** `strict: true` must be enabled in `tsconfig.json`. The `any` type is strictly prohibited—define explicit interfaces matching backend DTOs in `src/types/`.
-* **Server State & Auth Handling:** Use **TanStack Query (React Query)** for all REST API data fetching, caching, and invalidation, and attach `Authorization: Bearer <token>` via a centralized Axios/Fetch interceptor with automatic `/auth/refresh` token rotation on `401` responses.
-* **Mandatory 4-State UI Matrix:** Every data-driven screen and component must explicitly render distinct **Loading** (skeleton loaders), **Error** (alert banner + retry button), **Empty** (zero-state CTA), and **Data** states.
+* **Server State & Auth Handling:** Use TanStack Query (React Query) for all REST API data fetching, caching, and invalidation, and attach `Authorization: Bearer <token>` via a centralized Axios/Fetch interceptor with automatic `/auth/refresh` token rotation on `401` responses.
+* **Mandatory 4-State UI Matrix:** Every data-driven screen and component must explicitly render distinct Loading (skeleton loaders), Error (alert banner + retry button), Empty (zero-state CTA), and Data states.
 * **Security & XSS Prevention:** Never render raw HTML (`dangerouslySetInnerHTML` is prohibited) when displaying AI-extracted SLA clauses or user justification notes.
 
 ---
@@ -107,3 +152,6 @@ public class GlobalExceptionHandler {
 * Modifying unrelated module files while working on an isolated `feature/<module>` branch.
 * Committing code with failing tests or JUnit 5 + Mockito service line coverage below `80%`.
 
+
+
+```

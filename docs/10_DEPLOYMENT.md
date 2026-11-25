@@ -81,6 +81,9 @@ services:
       CLOUDFLARE_R2_ACCESS_KEY: ${CLOUDFLARE_R2_ACCESS_KEY}
       CLOUDFLARE_R2_SECRET_KEY: ${CLOUDFLARE_R2_SECRET_KEY}
       GEMINI_API_KEY: ${GEMINI_API_KEY}
+      ADMIN_EMAIL: ${ADMIN_EMAIL}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      AI_MODEL: ${AI_MODEL}
 
   frontend:
     build:
@@ -155,11 +158,49 @@ jobs:
           projectName: procureshield
           directory: ./frontend/dist
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+      - name: Trigger backend deploy (Render deploy hook)
+        run: curl --fail -X POST "${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
+      - name: Post-deploy health check
+        run: |
+          curl --fail --silent --show-error --retry 12 --retry-delay 15 --retry-connrefused \
+            https://api.procureshield.com/actuator/health
 
 ```
 
+
+**JaCoCo enforcement (`backend/pom.xml`).** `jacoco:check` enforces nothing without a rule, so add:
+
+```xml
+<plugin>
+  <groupId>org.jacoco</groupId>
+  <artifactId>jacoco-maven-plugin</artifactId>
+  <executions>
+    <execution><goals><goal>prepare-agent</goal></goals></execution>
+    <execution>
+      <id>report</id><phase>test</phase><goals><goal>report</goal></goals>
+    </execution>
+    <execution>
+      <id>check</id><phase>verify</phase><goals><goal>check</goal></goals>
+      <configuration>
+        <includes><include>com/procureshield/service/**</include></includes>
+        <rules>
+          <rule>
+            <element>BUNDLE</element>
+            <limits>
+              <limit><counter>LINE</counter><value>COVEREDRATIO</value><minimum>0.80</minimum></limit>
+            </limits>
+          </rule>
+        </rules>
+      </configuration>
+    </execution>
+  </executions>
+</plugin>
+```
+
+The CI step should be `mvn clean verify`. The backend is deployed to **Render** through a deploy hook (`RENDER_DEPLOY_HOOK_URL`); if you host on Azure Container Apps instead, replace that step with `az containerapp update --image ...`. The health check calls `/actuator/health` (TASK-03).
+
 ## 5. Required Secrets & Env Vars
 
-* **Database & Auth:** `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`, `SPRING_DATASOURCE_PASSWORD`, `JWT_SECRET`.
-* **Cloudflare R2 & AI:** `CLOUDFLARE_R2_ACCOUNT_ID`, `CLOUDFLARE_R2_ACCESS_KEY`, `CLOUDFLARE_R2_SECRET_KEY`, `CLOUDFLARE_R2_BUCKET`, `GEMINI_API_KEY`.
-* **CI/CD & Hosting:** `DOCKER_USERNAME`, `DOCKER_PASSWORD`, `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, `VITE_API_BASE_URL`.
+* **Database & Auth:** `SPRING_DATASOURCE_URL`, `SPRING_DATASOURCE_USERNAME`, `SPRING_DATASOURCE_PASSWORD`, `JWT_SECRET`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`.
+* **Cloudflare R2 & AI:** `CLOUDFLARE_R2_ACCOUNT_ID`, `CLOUDFLARE_R2_ACCESS_KEY`, `CLOUDFLARE_R2_SECRET_KEY`, `CLOUDFLARE_R2_BUCKET`, `GEMINI_API_KEY`, `AI_MODEL`.
+* **CI/CD & Hosting:** `DOCKER_USERNAME`, `DOCKER_PASSWORD`, `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, `VITE_API_BASE_URL`, `RENDER_DEPLOY_HOOK_URL`.

@@ -118,7 +118,7 @@ All authenticated routes render inside `<AppShell />`, providing persistent navi
 +---------------------------------------------------------------------------------------------------+
 | +-----------------------------------------------------------------------------------------------+ |
 | | COST CENTER BUDGET HEALTH (FY 2026)                                                           | |
-| | Annual Allocation: $150,000.00   |   Spent/Committed: $7,500.00   |   Remaining: $142,500.00  | |
+| | Annual: $150,000.00 | Spent: $0.00 | Reserved: $7,500.00 | Remaining: $142,500.00             | |
 | | [█████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░]  5.0% Utilized          | |
 | +-----------------------------------------------------------------------------------------------+ |
 |                                                                                                   |
@@ -139,7 +139,7 @@ All authenticated routes render inside `<AppShell />`, providing persistent navi
 ```
 
 - **Component Breakdown:**
-  - `BudgetProgressCard`: Displays `annualBudget`, `remainingBudget`, and calculated utilization percentage bar (`emerald` `<75%`, `amber` `75–90%`, `rose` `>90%`).
+  - `BudgetProgressCard`: Displays `annualBudget`, `remainingBudget`, `reservedBudget` and `spentBudget`, with a stacked utilization bar (spent + reserved as a percentage of annual).
   - `KpiSummaryGrid`: 3 metric cards summarizing pending approvals, high-risk subscriptions, and expiring SLA windows.
   - `RecentOrdersTable`: Compact table linking rows directly to `/orders/:poId`.
 - **Data & Event Triggers:**
@@ -173,7 +173,7 @@ All authenticated routes render inside `<AppShell />`, providing persistent navi
 
 - **Component Breakdown:**
   - `CatalogFilterBar`: Debounced search input (`300ms`), category filter pills, and AI Risk Score threshold toggle.
-  - `ProductCard`: Displays vendor logo (`logoR2Url`), wishlist heart toggle, color-coded AI Risk Score pill (`READY`, `AUDITING`, `MANUAL_REVIEW_REQUIRED`), annual seat pricing, and quick actions.
+  - `ProductCard`: Displays vendor logo (`logoR2Url`), wishlist heart toggle, color-coded AI Risk Score pill (`READY`, `AUDITING`, `MANUAL_REVIEW_REQUIRED`), annual seat pricing, and quick actions (`+ Add to Cart` is disabled unless `auditStatus === 'READY'`, tooltip "SLA risk audit not complete").
 - **Data & Event Triggers:**
   - `useQuery(['products', filters])` $\rightarrow$ `GET /api/v1/products?category=&maxRiskScore=&page=&size=`
   - `onAddToCart`: Calls `POST /api/v1/cart/items` with `{ productId, seatQuantity: 1 }` and invalidates `['cart']`.
@@ -208,8 +208,8 @@ All authenticated routes render inside `<AppShell />`, providing persistent navi
 ```
 
 - **Component Breakdown:**
-  - `VendorHeaderPanel`: Product metadata, seat stepper input, `Add to Cart` CTA, and presigned Cloudflare R2 PDF viewer button.
-  - `AiRiskScorecardPanel`: Renders structured `ai_risk_scorecard` JSONB payload (`overallScore`, `riskLevel`, `autoRenewalNoticeDays`, `dataResidencyCompliant`, `uncappedLiabilityDetected`, `auditorSummary`, and `flaggedClauses` list). If `auditStatus === 'MANUAL_REVIEW_REQUIRED'`, displays a `Retry AI Scan` button for `ROLE_PROCUREMENT_ADMIN`.
+  - `VendorHeaderPanel`: Product metadata, seat stepper input, `Add to Cart` CTA (disabled unless `auditStatus === 'READY'`), and presigned Cloudflare R2 PDF viewer button.
+  - `AiRiskScorecardPanel`: Renders structured `ai_risk_scorecard` JSONB payload (`overallScore`, `riskLevel`, `autoRenewalNoticeDays`, `dataResidencyCompliant`, `uncappedLiabilityDetected`, `auditorSummary`, and `flaggedClauses` list). If `auditStatus === 'MANUAL_REVIEW_REQUIRED'`, displays the `auditFailureReason` and a `Retry AI Scan` button for `ROLE_PROCUREMENT_ADMIN`.
 - **Data & Event Triggers:**
   - `useQuery(['productScorecard', id])` $\rightarrow$ `GET /api/v1/products/{id}/risk-scorecard`
   - `onRetryAudit` (Admin): Calls `POST /api/v1/products/{id}/retry-audit`.
@@ -242,6 +242,7 @@ All authenticated routes render inside `<AppShell />`, providing persistent navi
 
 - **Component Breakdown:**
   - `HighRiskBanner`: Conditionally rendered when `cart.highRiskWarning === true` (`bg-rose-50 border-rose-300 text-rose-800`).
+  - `UnauditedItemsBanner`: Rendered when `cart.checkoutBlocked === true`; lists the affected items, disables `[Proceed to Checkout]`, and offers `Remove` on each affected row.
   - `CartLineItemRow`: Seat quantity stepper (`min=1`), unit price, line subtotal, AI risk badge, and delete icon.
   - `BudgetCheckSummaryCard`: Compares `totalEstimatedCost` against `department.remainingBudget`. Disables checkout button if `totalEstimatedCost > remainingBudget`.
 - **Data & Event Triggers:**
@@ -302,7 +303,7 @@ All authenticated routes render inside `<AppShell />`, providing persistent navi
 
 - **Component Breakdown:**
   - `StatusFilterTabs`: Status pill tabs with live badge counts.
-  - `OrdersDataTable`: Paginated table with role-aware action buttons (`Review` for Dept Head on `PENDING_APPROVAL`, `Issue / Settle` for Procurement Admin on `APPROVED` / `ISSUED`, `Inspect Audit` for Auditor).
+  - `OrdersDataTable`: Paginated table with role-aware action buttons (`Review` for Dept Head on `PENDING_APPROVAL`, `Mark as Issued` for Procurement Admin on `APPROVED`, `Settle` for Procurement Admin on `ISSUED`, `Inspect Audit` for Auditor).
 - **Data & Event Triggers:**
   - `useQuery(['orders', status, dept, page])` $\rightarrow$ `GET /api/v1/orders`
   - Clicking `[View]` opens Screen 8 (`/orders/:poId`).
@@ -333,8 +334,10 @@ All authenticated routes render inside `<AppShell />`, providing persistent navi
   - **Mode A (Checkout Submission from `/cart`):** Displays `justification` textarea (`min 10 chars`) and `contractEndDate` date picker (`must be future date`). Submits `POST /api/v1/orders/checkout`.
   - **Mode B (Review, Approve, Issue & Settle on `/orders/:poId`):**
     - `ROLE_DEPARTMENT_HEAD` on `PENDING_APPROVAL`: Shows `Approve` / `Reject` buttons, mandatory `comments` input when rejecting, and mandatory risk-acknowledgment checkbox if `highestAiRiskScore < 60`. Calls `PATCH /api/v1/orders/{poId}/status`.
-    - `ROLE_PROCUREMENT_ADMIN` on `APPROVED`: Shows `Mark as Issued` (`PATCH /api/v1/orders/{poId}/status` with `ISSUED`) or `Settle & Deduct Budget` (`POST /api/v1/payments/settle/{poId}`).
-    - `ImmutableAuditTimeline`: Vertical timeline rendering `po_audit_logs` chronologically with lock icon indicator.
+    - `ROLE_PROCUREMENT_ADMIN` on `APPROVED`: Shows `Mark as Issued` only (`PATCH /api/v1/orders/{poId}/status` with `ISSUED`).
+    - `ROLE_PROCUREMENT_ADMIN` on `ISSUED`: Shows `Settle & Deduct Budget` (`POST /api/v1/payments/settle/{poId}`).
+  - `ImmutableAuditTimeline`: Vertical timeline rendering `po_audit_logs` chronologically with lock icon indicator.
+    - **Separation of duties:** If the PO's `requesterId` equals the current user, hide `Approve`, `Mark as Issued` and `Settle`; show only `Reject` (acts as withdraw). If `requiresEscalation === true`, a `ROLE_DEPARTMENT_HEAD` sees `Approve` disabled with the hint "Requires Procurement Admin approval".
 
 ---
 

@@ -15,7 +15,7 @@
 | **Core Backend API** | Java 21 / Spring Boot 3.x | PostgreSQL 16 *(Flyway)* | 8 modular services (`auth`, `user`, `product`, `cart`, `wishlist`, `order`, `payment`, `notification`). |
 | **Security & Auth** | Spring Security 6 / JJWT | Stateless JWT + Refresh | BCrypt password hashing, JWT rotation, 4-role RBAC enforcement. |
 | **Object Storage** | AWS S3 SDK v2 (Java) | Cloudflare R2 Bucket | Zero-egress storage for vendor logos, SOC2/ISO certs, and SLA contract PDFs (up to 10 MB). |
-| **AI Risk Engine** | Spring AI / REST Client + Apache PDFBox | Gemini / Claude API | Asynchronous PDF text extraction and structured JSONB compliance scoring ($1\text{–}100$). |
+| **AI Risk Engine** | Spring AI / REST Client + Apache PDFBox | Gemini / Claude API | Asynchronous PDF text extraction, LLM fact extraction, and deterministic rubric scoring into a JSONB scorecard ($1\text{–}100$). |
 | **API Docs & Testing** | SpringDoc OpenAPI 3 / JUnit 5 / Mockito | Swagger UI / Postman | Interactive REST documentation and $\ge 80\%$ service-layer unit test coverage. |
 | **DevOps & CI/CD** | Docker / Docker Compose / GitHub Actions | Vercel + Azure Container Apps | Multi-stage container builds, automated test execution, and cloud deployment pipelines. |
 
@@ -23,12 +23,12 @@
 The backend follows a strict **Layered Architecture** (`Controller -> Service -> Repository -> Entity/DTO`) and will be implemented one module at a time in the mandatory ADF sequence:
 
 1. **Authentication Service (`auth`):** Stateless JWT login, registration, refresh token rotation, and 4-role RBAC (`ROLE_EMPLOYEE`, `ROLE_DEPARTMENT_HEAD`, `ROLE_PROCUREMENT_ADMIN`, `ROLE_AUDITOR`).
-2. **User Service (`user`):** Employee profiles, vendor organization profiles, and departmental cost-center budget allocations.
+2. **User Service (`user`):** Employee profiles, role assignment, and departmental cost-center budget ledgers (remaining, reserved and spent).
 3. **Product Service (`product`):** Approved Vendor & SaaS License Catalog; handles Cloudflare R2 uploads (SLA PDFs, logos, SOC2 certs) and triggers the asynchronous AI Compliance Auditor ($1\text{–}100$ JSONB Risk Scorecard).
 4. **Cart Service (`cart`):** Procurement Requisition builder where employees select software license seats and review aggregated AI contract risk warnings prior to submission.
 5. **Wishlist Service (`wishlist`):** Vendor Shortlist & Comparison board for bookmarking candidate SaaS tools during evaluation.
-6. **Order Service (`order`):** Purchase Order (PO) lifecycle state machine (`DRAFT -> PENDING_APPROVAL -> APPROVED -> REJECTED -> ISSUED -> COMPLETED`) with immutable compliance audit logs.
-7. **Payment Service (`payment`):** Simulated corporate invoice settlement, departmental budget ledger deduction, and payment receipt generation.
+6. **Order Service (`order`):** Purchase Order (PO) lifecycle state machine (`PENDING_APPROVAL -> APPROVED | REJECTED`, `APPROVED -> ISSUED`; `COMPLETED` is reached only through settlement) with immutable compliance audit logs.
+7. **Payment Service (`payment`):** Simulated corporate invoice settlement, reserved-to-spent departmental budget conversion, and payment receipt generation.
 8. **Notification Service (`notification`):** Automated email and in-app alerts for PO status transitions, high-risk SLA flags, and $60/30/15$-day contract auto-renewal reminders.
 
 ## 5. Master Folder Structure
@@ -46,7 +46,7 @@ procureshield-ai/
 │   ├── 08_CODING_STANDARDS.md
 │   ├── 09_TESTING.md
 │   ├── 10_DEPLOYMENT.md
-│   └── 11_PROMPTS.md                   # Daily AI Engineering Prompts
+│   └── 11_PROMPTS.md                   # Engineering Prompts
 ├── backend/                            # Java 21 / Spring Boot 3.x Modular Monolith
 │   ├── src/main/java/com/procureshield/
 │   │   ├── config/                     # Security, CORS, R2 S3Client, Async, Swagger
@@ -86,4 +86,4 @@ procureshield-ai/
 - **Frontend Hosting**: Static React/Vite bundle deployed on **Cloudflare Pages** or **Vercel**.
 - **Backend Hosting**: Dockerized Spring Boot 3.x container deployed on **Azure Container Apps** or **Render**.
 - **Database & Object Storage**: Managed **PostgreSQL 16** (with Flyway migrations and `jsonb` columns) and **Cloudflare R2** (`procureshield-assets` bucket).
-- **CI/CD & Secrets**: Automated via `.github/workflows/deploy.yml` using GitHub Repository Secrets (`DB_URL`, `JWT_SECRET`, `R2_ACCESS_KEY`, `R2_SECRET_KEY`, `AI_API_KEY`, `ACR_CREDENTIALS`).
+- **CI/CD & Secrets**: Automated via `.github/workflows/deploy.yml` using GitHub Repository Secrets (the authoritative list is `10_DEPLOYMENT.md` §5).
