@@ -15,6 +15,7 @@ import com.procureshield.repository.PaymentRepository;
 import com.procureshield.repository.PoAuditLogRepository;
 import com.procureshield.repository.PurchaseOrderRepository;
 import com.procureshield.repository.UserRepository;
+import com.procureshield.service.notification.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
@@ -34,6 +35,7 @@ public class PaymentService {
     private final DepartmentRepository departmentRepository;
     private final UserRepository userRepository;
     private final PoAuditLogRepository poAuditLogRepository;
+    private final NotificationService notificationService;
 
     @Transactional
     public PaymentReceiptResponseDto settleOrder(String actorEmail, Long poId) {
@@ -88,14 +90,23 @@ public class PaymentService {
         order.setStatus(PurchaseOrderStatus.COMPLETED);
         purchaseOrderRepository.save(order);
 
+        String settlementComment = "Settled invoice under transaction " + txnRef + ".";
         PoAuditLog auditLog = PoAuditLog.builder()
                 .purchaseOrder(order)
                 .actor(actor)
                 .previousStatus(previousStatus)
                 .newStatus(PurchaseOrderStatus.COMPLETED)
-                .comments("Settled invoice under transaction " + txnRef + ".")
+                .comments(settlementComment)
                 .build();
         poAuditLogRepository.save(auditLog);
+
+        notificationService.recordPoStatusNotification(
+                order.getRequester(),
+                order.getPoNumber(),
+                previousStatus,
+                PurchaseOrderStatus.COMPLETED,
+                settlementComment
+        );
 
         return new PaymentReceiptResponseDto(
                 savedPayment.getId(),

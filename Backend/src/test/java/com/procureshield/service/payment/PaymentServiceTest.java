@@ -13,6 +13,7 @@ import com.procureshield.repository.PaymentRepository;
 import com.procureshield.repository.PoAuditLogRepository;
 import com.procureshield.repository.PurchaseOrderRepository;
 import com.procureshield.repository.UserRepository;
+import com.procureshield.service.notification.NotificationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -29,6 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -51,6 +53,9 @@ class PaymentServiceTest {
     @Mock
     private PoAuditLogRepository poAuditLogRepository;
 
+    @Mock
+    private NotificationService notificationService;
+
     private PaymentService paymentService;
 
     private Department department;
@@ -65,7 +70,8 @@ class PaymentServiceTest {
                 purchaseOrderRepository,
                 departmentRepository,
                 userRepository,
-                poAuditLogRepository
+                poAuditLogRepository,
+                notificationService
         );
 
         department = Department.builder()
@@ -132,6 +138,13 @@ class PaymentServiceTest {
         assertEquals(new BigDecimal("7500.00"), receipt.departmentBudget().spent());
         assertNotNull(receipt.paidAt());
         verify(poAuditLogRepository).save(any(PoAuditLog.class));
+        verify(notificationService).recordPoStatusNotification(
+                eq(requester),
+                eq("PO-2026-0501"),
+                eq(PurchaseOrderStatus.ISSUED),
+                eq(PurchaseOrderStatus.COMPLETED),
+                any()
+        );
     }
 
     @Test
@@ -159,6 +172,7 @@ class PaymentServiceTest {
 
         assertThrows(IllegalArgumentException.class, () -> paymentService.settleOrder(admin.getEmail(), 501L));
         verify(paymentRepository, never()).save(any());
+        verify(notificationService, never()).recordPoStatusNotification(any(), any(), any(), any(), any());
     }
 
     @Test
@@ -172,5 +186,6 @@ class PaymentServiceTest {
 
         assertThrows(IllegalStateException.class, () -> paymentService.settleOrder(admin.getEmail(), 501L));
         verify(paymentRepository, never()).save(any());
+        verify(notificationService, never()).recordPoStatusNotification(any(), any(), any(), any(), any());
     }
 }

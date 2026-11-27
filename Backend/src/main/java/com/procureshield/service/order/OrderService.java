@@ -24,6 +24,7 @@ import com.procureshield.repository.DepartmentRepository;
 import com.procureshield.repository.PoAuditLogRepository;
 import com.procureshield.repository.PurchaseOrderRepository;
 import com.procureshield.repository.UserRepository;
+import com.procureshield.service.notification.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.AccessDeniedException;
@@ -46,6 +47,7 @@ public class OrderService {
     private final CartItemRepository cartItemRepository;
     private final UserRepository userRepository;
     private final DepartmentRepository departmentRepository;
+    private final NotificationService notificationService;
 
     @Value("${approval.escalation-threshold:10000.00}")
     private BigDecimal escalationThreshold;
@@ -251,17 +253,27 @@ public class OrderService {
             order.setStatus(PurchaseOrderStatus.ISSUED);
         }
 
+        String trimmedComments = request.comments() != null ? request.comments().trim() : null;
+
         PoAuditLog auditLog = PoAuditLog.builder()
                 .purchaseOrder(order)
                 .actor(actor)
                 .previousStatus(previousStatus)
                 .newStatus(order.getStatus())
-                .comments(request.comments() != null ? request.comments().trim() : null)
+                .comments(trimmedComments)
                 .build();
         PoAuditLog savedLog = poAuditLogRepository.save(auditLog);
         order.getAuditLogs().add(savedLog);
 
         PurchaseOrder updated = purchaseOrderRepository.save(order);
+
+        notificationService.recordPoStatusNotification(
+                updated.getRequester(),
+                updated.getPoNumber(),
+                previousStatus,
+                updated.getStatus(),
+                trimmedComments
+        );
 
         return new OrderStatusResponseDto(
                 updated.getId(),

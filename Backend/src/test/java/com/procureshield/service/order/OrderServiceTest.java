@@ -5,6 +5,7 @@ import com.procureshield.dto.OrderDtos.CheckoutResponseDto;
 import com.procureshield.dto.OrderDtos.OrderStatusResponseDto;
 import com.procureshield.dto.OrderDtos.OrderStatusUpdateDto;
 import com.procureshield.dto.OrderDtos.OrderTransitionStatus;
+import com.procureshield.service.notification.NotificationService;
 import com.procureshield.entity.AuditStatus;
 import com.procureshield.entity.CartItem;
 import com.procureshield.entity.Department;
@@ -61,6 +62,9 @@ class OrderServiceTest {
     @Mock
     private DepartmentRepository departmentRepository;
 
+    @Mock
+    private NotificationService notificationService;
+
     private OrderService orderService;
 
     private Department department;
@@ -76,7 +80,8 @@ class OrderServiceTest {
                 poAuditLogRepository,
                 cartItemRepository,
                 userRepository,
-                departmentRepository
+                departmentRepository,
+                notificationService
         );
         ReflectionTestUtils.setField(orderService, "escalationThreshold", new BigDecimal("10000.00"));
 
