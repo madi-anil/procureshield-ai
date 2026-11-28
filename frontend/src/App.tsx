@@ -4,6 +4,8 @@ import { AuthProvider, useAuth } from "./context/AuthContext";
 import { LoginPage } from "./pages/LoginPage";
 import { RegisterPage } from "./pages/RegisterPage";
 import { DashboardPage } from "./pages/DashboardPage";
+import { CatalogPage } from "./pages/CatalogPage";
+import { ShortlistPage } from "./pages/ShortlistPage";
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
   const { isAuthenticated } = useAuth();
@@ -47,6 +49,22 @@ export function App() {
             element={
               <ProtectedRoute>
                 <DashboardPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/catalog"
+            element={
+              <ProtectedRoute>
+                <CatalogPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/shortlist"
+            element={
+              <ProtectedRoute>
+                <ShortlistPage />
               </ProtectedRoute>
             }
           />
