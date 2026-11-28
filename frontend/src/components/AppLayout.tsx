@@ -6,6 +6,8 @@ import {
   Boxes,
   BookmarkCheck,
   ShoppingCart,
+  FileSpreadsheet,
+  Bell,
   LogOut,
   Menu,
   X,
@@ -21,6 +23,8 @@ const navItems = [
   { to: "/catalog", label: "Vendor Catalog", icon: Boxes },
   { to: "/shortlist", label: "Vendor Shortlist", icon: BookmarkCheck },
   { to: "/cart", label: "Requisition Cart", icon: ShoppingCart },
+  { to: "/orders", label: "Purchase Orders", icon: FileSpreadsheet },
+  { to: "/notifications", label: "Notifications", icon: Bell },
 ];
 
 export function AppLayout({ children }: AppLayoutProps) {
