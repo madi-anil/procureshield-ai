@@ -7,6 +7,7 @@ import { DashboardPage } from "./pages/DashboardPage";
 import { CatalogPage } from "./pages/CatalogPage";
 import { ShortlistPage } from "./pages/ShortlistPage";
 import { CartPage } from "./pages/CartPage";
+import { NotificationsPage } from "./pages/NotificationsPage";
 
 function ProtectedRoute({ children }: { children: ReactNode }) {
   const { isAuthenticated } = useAuth();
@@ -80,6 +81,14 @@ export function App() {
             }
           />
         </Routes>
+        <Route
+            path="/notifications"
+            element={
+              <ProtectedRoute>
+                <NotificationsPage />
+              </ProtectedRoute>
+            }
+          />
       </BrowserRouter>
     </AuthProvider>
   );
